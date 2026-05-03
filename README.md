@@ -1,6 +1,8 @@
-# Model Validation — The Complete Guide
+# ModelSure — Model Validation guides
 
-Static reference page on **model validation** for machine learning: splits, cross-validation, metrics, bias–variance, clustering validation, and an end-to-end workflow. Examples use **Python** and **scikit-learn**.
+**ModelSure** bundles two static guides: **classic model validation** (`index.html`) and **agentic model validation** (`agentic_model_validation.html`). Both share the same editorial look (Playfair / DM Sans / JetBrains Mono, cream paper palette, dark hero headers).
+
+The classic guide covers splits, cross-validation, metrics, bias–variance, clustering validation, and an end-to-end workflow with **Python** and **scikit-learn**. The agentic guide keeps its original deep-dive copy; only layout and theme were aligned with ModelSure.
 
 ## Live site (GitHub Pages)
 
@@ -17,16 +19,18 @@ If you still open `model_validation.html`, it redirects to `index.html`.
 
 | File | Description |
 |------|-------------|
-| `index.html` | Page structure and content (entry URL for GitHub Pages) |
-| `model_validation.css` | Layout, typography, and component styles |
-| `model_validation.js` | Table-of-contents pills: highlights the section in view while scrolling |
+| `index.html` | Classic model validation — page structure and content (GitHub Pages entry) |
+| `agentic_model_validation.html` | Agentic model validation — same article body as before; ModelSure-themed layout |
+| `agentic_modelsure.css` | Styles for the agentic guide (palette + UI aligned with `model_validation.css`) |
+| `model_validation.css` | Classic guide layout, typography, ModelSure **switch bar** styles |
+| `model_validation.js` | Classic guide: left **Contents** nav + active section while scrolling |
 | `model_validation.html` | Short redirect to `index.html` (optional bookmark) |
 
 ## How to view locally
 
 Open **`index.html`** in a browser (double-click the file, or use **Open with** your preferred browser).
 
-Keep `index.html`, `model_validation.css`, and `model_validation.js` in the **same folder**.
+Keep `index.html`, `agentic_model_validation.html`, both CSS files, and `model_validation.js` in the **same folder** so links and assets resolve.
 
 ### Local server (optional)
 

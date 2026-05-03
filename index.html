@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Model Validation — The Complete Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="model_validation.css" />
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="header-grid">
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+  </div>
+  <div class="header-inner">
+    <div class="header-eyebrow">Machine Learning · Statistics · Data Science</div>
+    <h1>Model Validation<br/><em>The Complete Guide</em></h1>
+    <p class="header-sub">From train/test splits to clustering metrics — every technique, explained with code and examples.</p>
+    <div class="header-meta">
+      <div class="meta-item">Techniques <span>8+</span></div>
+      <div class="meta-item">Code Examples <span>6</span></div>
+      <div class="meta-item">Metrics Covered <span>15+</span></div>
+      <!-- <div class="meta-item">Reading Time <span>~18 min</span></div> -->
+    </div>
+  </div>
+</header>
+
+<!-- ══ TOC ══ -->
+<div class="toc-wrap">
+  <div class="toc-inner">
+    <span class="toc-label">Contents</span>
+    <div class="toc-pills">
+      <a href="#intro">Introduction</a>
+      <a href="#splitting">Data Splitting</a>
+      <a href="#cv">Cross-Validation</a>
+      <a href="#metrics">Metrics</a>
+      <a href="#bias-variance">Bias &amp; Variance</a>
+      <a href="#clustering">Clustering Validation</a>
+      <a href="#steps">Full Workflow</a>
+      <a href="#best-practices">Best Practices</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE ══ -->
+<div class="page">
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="section-label">01 — Introduction</div>
+      <h2>What Is Model Validation?</h2>
+      <p>Model validation is the systematic process of evaluating how well a trained machine learning or statistical model <em>generalises</em> to unseen data. Without it, you risk deploying a model that memorised training data but fails in production — a failure mode known as <strong>overfitting</strong>.</p>
+      <p>Validation answers a single, critical question: <em>"Does my model work on data it has never seen before?"</em> The answer determines whether to trust the model's predictions in the real world.</p>
+
+      <div class="callout">
+        <strong>Key Insight</strong>
+        A model that scores 99% on training data but 60% on test data is not a good model — it has simply memorised the training set. Validation surfaces this gap before deployment.
+      </div>
+
+      <div class="step-flow">
+        <div class="step-item">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <strong>Collect &amp; Prepare Data</strong>
+            <p>Gather raw data, clean it, handle missing values, engineer features.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <strong>Split the Data</strong>
+            <p>Reserve a portion for validation and a final holdout test set before any modelling.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <strong>Train the Model</strong>
+            <p>Fit the model exclusively on training data, never touching the validation or test sets.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <strong>Validate &amp; Tune</strong>
+            <p>Evaluate on validation data, adjust hyperparameters, repeat until satisfied.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">05</div>
+          <div class="step-body">
+            <strong>Final Test Evaluation</strong>
+            <p>Run once on the held-out test set. This is your honest performance estimate.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATA SPLITTING -->
+    <section id="splitting">
+      <div class="section-label">02 — Data Splitting</div>
+      <h2>Splitting Strategies</h2>
+      <p>Before training a single model, you must decide how to partition your data. The strategy you choose affects how reliable your performance estimates are.</p>
+
+      <h3><span class="h3-num">2.1</span> Train / Validation / Test Split</h3>
+      <p>The simplest approach: divide your data into three non-overlapping sets. Training set is used to fit the model, validation set to tune hyperparameters, and the final test set to report unbiased performance.</p>
+
+      <div class="diagram-wrap">
+        <div class="diagram-title">Typical 70 / 15 / 15 split</div>
+        <svg viewBox="0 0 600 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;">
+          <rect x="0"   y="10" width="420" height="40" fill="#1a6b4a" rx="2"/>
+          <rect x="424" y="10" width="87"  height="40" fill="#1c4d8c" rx="2"/>
+          <rect x="515" y="10" width="85"  height="40" fill="#c0392b" rx="2"/>
+          <text x="210" y="35" fill="white" font-family="JetBrains Mono, monospace" font-size="13" text-anchor="middle" dominant-baseline="middle">Training — 70%</text>
+          <text x="468" y="35" fill="white" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle" dominant-baseline="middle">Val — 15%</text>
+          <text x="558" y="35" fill="white" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle" dominant-baseline="middle">Test — 15%</text>
+          <text x="0"   y="65" fill="#6b6355" font-family="DM Sans, sans-serif" font-size="11">Fit model here</text>
+          <text x="424" y="65" fill="#6b6355" font-family="DM Sans, sans-serif" font-size="11">Tune</text>
+          <text x="515" y="65" fill="#6b6355" font-family="DM Sans, sans-serif" font-size="11">Report</text>
+        </svg>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-lang">Python · scikit-learn</div>
+        </div>
+        <pre><span class="k">from</span> <span class="v">sklearn.model_selection</span> <span class="k">import</span> <span class="fn">train_test_split</span>
+
+<span class="c"># Load your dataset (X = features, y = labels)</span>
+<span class="v">X</span>, <span class="v">y</span> <span class="op">=</span> <span class="fn">load_dataset</span>()
+
+<span class="c"># First split off a 15% test set</span>
+<span class="v">X_temp</span>, <span class="v">X_test</span>, <span class="v">y_temp</span>, <span class="v">y_test</span> <span class="op">=</span> <span class="fn">train_test_split</span>(
+    <span class="v">X</span>, <span class="v">y</span>, <span class="v">test_size</span><span class="op">=</span><span class="n">0.15</span>, <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>
+)
+
+<span class="c"># Split the remainder into train (≈82%) and val (≈18%)</span>
+<span class="v">X_train</span>, <span class="v">X_val</span>, <span class="v">y_train</span>, <span class="v">y_val</span> <span class="op">=</span> <span class="fn">train_test_split</span>(
+    <span class="v">X_temp</span>, <span class="v">y_temp</span>, <span class="v">test_size</span><span class="op">=</span><span class="n">0.176</span>, <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>
+)
+
+<span class="k">print</span>(<span class="s">f"Train: {len(X_train)} | Val: {len(X_val)} | Test: {len(X_test)}"</span>)</pre>
+      </div>
+
+      <h3><span class="h3-num">2.2</span> Time-Series Split</h3>
+      <p>For sequential data (stock prices, sensor readings, sales), random shuffling would be <strong>data leakage</strong>. You must always train on the past and validate on the future. The walk-forward approach respects temporal order by expanding the training window each fold.</p>
+
+      <div class="callout blue">
+        <strong>Time-Series Rule</strong>
+        Never shuffle time-series data before splitting. Future data must never appear in a training fold. Walk-forward validation is the gold standard.
+      </div>
+    </section>
+
+    <!-- CROSS VALIDATION -->
+    <section id="cv">
+      <div class="section-label">03 — Cross-Validation</div>
+      <h2>Cross-Validation Techniques</h2>
+      <p>A single train/test split can be highly sensitive to which samples land in which partition. Cross-validation addresses this by rotating through multiple splits and averaging the results.</p>
+
+      <div class="technique-grid">
+        <div class="tcard red">
+          <div class="tc-tag">Classic</div>
+          <h4>k-Fold CV</h4>
+          <p>Data is split into k equal folds. The model trains on k-1 folds and tests on the remaining fold. This repeats k times.</p>
+          <div class="tc-pros"><span>✓</span> Efficient use of data</div>
+          <div class="tc-pros"><span>✓</span> Low variance estimate</div>
+          <div class="tc-cons"><span>✗</span> k times slower to compute</div>
+        </div>
+        <div class="tcard green">
+          <div class="tc-tag">Imbalanced Data</div>
+          <h4>Stratified k-Fold</h4>
+          <p>Like k-Fold but each fold preserves the class distribution of the original dataset. Essential for imbalanced problems.</p>
+          <div class="tc-pros"><span>✓</span> Preserves class ratios</div>
+          <div class="tc-pros"><span>✓</span> More reliable for rare classes</div>
+          <div class="tc-cons"><span>✗</span> Only for classification</div>
+        </div>
+        <div class="tcard blue">
+          <div class="tc-tag">Thorough</div>
+          <h4>Leave-One-Out (LOO)</h4>
+          <p>Extreme case of k-Fold where k equals the dataset size. Every sample gets to be a test set of one.</p>
+          <div class="tc-pros"><span>✓</span> Maximum data usage</div>
+          <div class="tc-pros"><span>✓</span> Near-unbiased estimate</div>
+          <div class="tc-cons"><span>✗</span> Extremely slow for large N</div>
+        </div>
+        <div class="tcard gold">
+          <div class="tc-tag">Small Data</div>
+          <h4>Repeated k-Fold</h4>
+          <p>Runs k-Fold multiple times with different random splits, then averages all results for a more stable estimate.</p>
+          <div class="tc-pros"><span>✓</span> Very stable estimate</div>
+          <div class="tc-pros"><span>✓</span> Captures random variance</div>
+          <div class="tc-cons"><span>✗</span> k × repeats training runs</div>
+        </div>
+      </div>
+
+      <div class="diagram-wrap">
+        <div class="diagram-title">5-Fold Cross-Validation — Each fold rotates as the test set</div>
+        <svg viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;">
+          <defs>
+            <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#c0392b" stroke-width="2"/>
+            </pattern>
+          </defs>
+          <!-- Row labels -->
+          <text x="0" y="24"  fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="10">Fold 1</text>
+          <text x="0" y="50"  fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="10">Fold 2</text>
+          <text x="0" y="76"  fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="10">Fold 3</text>
+          <text x="0" y="102" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="10">Fold 4</text>
+          <text x="0" y="128" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="10">Fold 5</text>
+          <!-- Row 1 -->
+          <rect x="60" y="10" width="100" height="20" fill="url(#hatch)" stroke="#c0392b" stroke-width="1"/>
+          <rect x="164" y="10" width="390" height="20" fill="#1a6b4a"/>
+          <!-- Row 2 -->
+          <rect x="60" y="36" width="100" height="20" fill="#1a6b4a"/>
+          <rect x="164" y="36" width="97" height="20" fill="url(#hatch)" stroke="#c0392b" stroke-width="1"/>
+          <rect x="265" y="36" width="289" height="20" fill="#1a6b4a"/>
+          <!-- Row 3 -->
+          <rect x="60" y="62" width="194" height="20" fill="#1a6b4a"/>
+          <rect x="258" y="62" width="97" height="20" fill="url(#hatch)" stroke="#c0392b" stroke-width="1"/>
+          <rect x="359" y="62" width="195" height="20" fill="#1a6b4a"/>
+          <!-- Row 4 -->
+          <rect x="60" y="88" width="294" height="20" fill="#1a6b4a"/>
+          <rect x="358" y="88" width="97" height="20" fill="url(#hatch)" stroke="#c0392b" stroke-width="1"/>
+          <rect x="459" y="88" width="95" height="20" fill="#1a6b4a"/>
+          <!-- Row 5 -->
+          <rect x="60" y="114" width="394" height="20" fill="#1a6b4a"/>
+          <rect x="458" y="114" width="96" height="20" fill="url(#hatch)" stroke="#c0392b" stroke-width="1"/>
+          <!-- Legend -->
+          <rect x="60" y="142" width="14" height="10" fill="#1a6b4a"/>
+          <text x="78" y="151" fill="#6b6355" font-family="DM Sans,sans-serif" font-size="10">Training</text>
+          <rect x="140" y="142" width="14" height="10" fill="url(#hatch)" stroke="#c0392b" stroke-width="1"/>
+          <text x="158" y="151" fill="#6b6355" font-family="DM Sans,sans-serif" font-size="10">Test fold</text>
+        </svg>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-lang">Python · Stratified k-Fold Example</div>
+        </div>
+        <pre><span class="k">from</span> <span class="v">sklearn.model_selection</span> <span class="k">import</span> <span class="fn">StratifiedKFold</span>, <span class="fn">cross_val_score</span>
+<span class="k">from</span> <span class="v">sklearn.ensemble</span> <span class="k">import</span> <span class="cls">RandomForestClassifier</span>
+<span class="k">import</span> <span class="v">numpy</span> <span class="k">as</span> <span class="v">np</span>
+
+<span class="v">model</span> <span class="op">=</span> <span class="cls">RandomForestClassifier</span>(<span class="v">n_estimators</span><span class="op">=</span><span class="n">100</span>, <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>)
+<span class="v">skf</span>   <span class="op">=</span> <span class="cls">StratifiedKFold</span>(<span class="v">n_splits</span><span class="op">=</span><span class="n">5</span>, <span class="v">shuffle</span><span class="op">=</span><span class="k">True</span>, <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>)
+
+<span class="v">scores</span> <span class="op">=</span> <span class="fn">cross_val_score</span>(
+    <span class="v">model</span>, <span class="v">X_train</span>, <span class="v">y_train</span>,
+    <span class="v">cv</span><span class="op">=</span><span class="v">skf</span>, <span class="v">scoring</span><span class="op">=</span><span class="s">'f1_weighted'</span>
+)
+
+<span class="k">print</span>(<span class="s">f"F1 per fold : {scores.round(3)}"</span>)
+<span class="k">print</span>(<span class="s">f"Mean ± Std  : {scores.mean():.3f} ± {scores.std():.3f}"</span>)</pre>
+      </div>
+    </section>
+
+    <!-- METRICS -->
+    <section id="metrics">
+      <div class="section-label">04 — Metrics</div>
+      <h2>Validation Metrics</h2>
+      <p>Choosing the right metric is as important as the validation strategy itself. A model optimised on accuracy may be terrible at detecting rare diseases. Metrics must reflect <em>what actually matters</em> for your problem.</p>
+
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Task</th>
+            <th>Formula / Description</th>
+            <th>Best When</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>RMSE</strong></td>
+            <td><span class="badge reg">Regression</span></td>
+            <td>√(Σ(y − ŷ)² / n) — penalises large errors heavily</td>
+            <td>Large errors are especially costly</td>
+          </tr>
+          <tr>
+            <td><strong>MAE</strong></td>
+            <td><span class="badge reg">Regression</span></td>
+            <td>Σ|y − ŷ| / n — average absolute deviation</td>
+            <td>Outliers are common and acceptable</td>
+          </tr>
+          <tr>
+            <td><strong>R²</strong></td>
+            <td><span class="badge reg">Regression</span></td>
+            <td>1 − SS_res / SS_tot — variance explained</td>
+            <td>Comparing models on same data</td>
+          </tr>
+          <tr>
+            <td><strong>Accuracy</strong></td>
+            <td><span class="badge cls">Classification</span></td>
+            <td>(TP + TN) / total — fraction correct</td>
+            <td>Balanced class distributions</td>
+          </tr>
+          <tr>
+            <td><strong>Precision</strong></td>
+            <td><span class="badge cls">Classification</span></td>
+            <td>TP / (TP + FP) — of positives predicted, how many are real?</td>
+            <td>False positives are costly (spam)</td>
+          </tr>
+          <tr>
+            <td><strong>Recall</strong></td>
+            <td><span class="badge cls">Classification</span></td>
+            <td>TP / (TP + FN) — of real positives, how many did we catch?</td>
+            <td>False negatives are costly (disease)</td>
+          </tr>
+          <tr>
+            <td><strong>F1 Score</strong></td>
+            <td><span class="badge cls">Classification</span></td>
+            <td>2 × (P × R) / (P + R) — harmonic mean of precision &amp; recall</td>
+            <td>Imbalanced classes</td>
+          </tr>
+          <tr>
+            <td><strong>AUC-ROC</strong></td>
+            <td><span class="badge cls">Classification</span></td>
+            <td>Area under the ROC curve — discrimination ability</td>
+            <td>Threshold-independent evaluation</td>
+          </tr>
+          <tr>
+            <td><strong>Silhouette</strong></td>
+            <td><span class="badge clus">Clustering</span></td>
+            <td>(b − a) / max(a, b) — cohesion vs separation</td>
+            <td>Unknown ground truth labels</td>
+          </tr>
+          <tr>
+            <td><strong>Davies-Bouldin</strong></td>
+            <td><span class="badge clus">Clustering</span></td>
+            <td>Lower is better — avg cluster similarity ratio</td>
+            <td>Comparing clustering algorithms</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-lang">Python · Classification Metrics</div>
+        </div>
+        <pre><span class="k">from</span> <span class="v">sklearn.metrics</span> <span class="k">import</span> (
+    <span class="fn">accuracy_score</span>, <span class="fn">precision_score</span>, <span class="fn">recall_score</span>,
+    <span class="fn">f1_score</span>, <span class="fn">roc_auc_score</span>, <span class="fn">confusion_matrix</span>,
+    <span class="fn">classification_report</span>
+)
+
+<span class="c"># Predict on test set</span>
+<span class="v">y_pred</span> <span class="op">=</span> <span class="v">model</span>.<span class="fn">predict</span>(<span class="v">X_test</span>)
+<span class="v">y_prob</span> <span class="op">=</span> <span class="v">model</span>.<span class="fn">predict_proba</span>(<span class="v">X_test</span>)[:, <span class="n">1</span>]
+
+<span class="k">print</span>(<span class="s">"Accuracy  :"</span>, <span class="fn">accuracy_score</span>(<span class="v">y_test</span>, <span class="v">y_pred</span>).<span class="fn">round</span>(<span class="n">4</span>))
+<span class="k">print</span>(<span class="s">"Precision :"</span>, <span class="fn">precision_score</span>(<span class="v">y_test</span>, <span class="v">y_pred</span>).<span class="fn">round</span>(<span class="n">4</span>))
+<span class="k">print</span>(<span class="s">"Recall    :"</span>, <span class="fn">recall_score</span>(<span class="v">y_test</span>, <span class="v">y_pred</span>).<span class="fn">round</span>(<span class="n">4</span>))
+<span class="k">print</span>(<span class="s">"F1 Score  :"</span>, <span class="fn">f1_score</span>(<span class="v">y_test</span>, <span class="v">y_pred</span>).<span class="fn">round</span>(<span class="n">4</span>))
+<span class="k">print</span>(<span class="s">"ROC-AUC   :"</span>, <span class="fn">roc_auc_score</span>(<span class="v">y_test</span>, <span class="v">y_prob</span>).<span class="fn">round</span>(<span class="n">4</span>))
+
+<span class="k">print</span>(<span class="s">"\nDetailed Report:"</span>)
+<span class="k">print</span>(<span class="fn">classification_report</span>(<span class="v">y_test</span>, <span class="v">y_pred</span>))</pre>
+      </div>
+    </section>
+
+    <!-- BIAS VARIANCE -->
+    <section id="bias-variance">
+      <div class="section-label">05 — Bias &amp; Variance</div>
+      <h2>Diagnosing Bias &amp; Variance</h2>
+      <p>The bias-variance tradeoff is the fundamental tension in machine learning. Every model lives somewhere on this spectrum, and validation helps you diagnose where your model sits.</p>
+
+      <div class="bv-grid">
+        <div class="bv-card">
+          <div class="bv-title" style="color:var(--accent)">High Bias (Underfitting)</div>
+          <div class="bv-sub">The model is too simple to capture the signal</div>
+          <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;margin:0 auto;display:block;">
+            <!-- Data points scattered -->
+            <circle cx="20"  cy="90" r="4" fill="#c0392b" opacity="0.7"/>
+            <circle cx="40"  cy="60" r="4" fill="#c0392b" opacity="0.7"/>
+            <circle cx="60"  cy="40" r="4" fill="#c0392b" opacity="0.7"/>
+            <circle cx="80"  cy="25" r="4" fill="#c0392b" opacity="0.7"/>
+            <circle cx="100" cy="30" r="4" fill="#c0392b" opacity="0.7"/>
+            <circle cx="120" cy="50" r="4" fill="#c0392b" opacity="0.7"/>
+            <circle cx="140" cy="75" r="4" fill="#c0392b" opacity="0.7"/>
+            <circle cx="160" cy="95" r="4" fill="#c0392b" opacity="0.7"/>
+            <!-- Bad straight line fit -->
+            <line x1="10" y1="85" x2="175" y2="30" stroke="#1c4d8c" stroke-width="2.5"/>
+          </svg>
+          <div style="font-size:13px;color:var(--muted);margin-top:12px;">
+            Training error ↑ &nbsp;|&nbsp; Test error ↑<br/>
+            <strong>Fix:</strong> More features, bigger model
+          </div>
+        </div>
+        <div class="bv-card">
+          <div class="bv-title" style="color:var(--accent2)">High Variance (Overfitting)</div>
+          <div class="bv-sub">The model memorised training noise</div>
+          <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;margin:0 auto;display:block;">
+            <circle cx="20"  cy="90" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <circle cx="40"  cy="60" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <circle cx="60"  cy="40" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <circle cx="80"  cy="25" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <circle cx="100" cy="30" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <circle cx="120" cy="50" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <circle cx="140" cy="75" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <circle cx="160" cy="95" r="4" fill="#1a6b4a" opacity="0.7"/>
+            <!-- Wiggly overfit curve -->
+            <path d="M10,88 C20,70 30,95 40,60 C50,25 60,50 80,25 C100,5 110,55 120,50 C135,44 145,80 160,95 L175,90"
+                  fill="none" stroke="#c0392b" stroke-width="2.5"/>
+          </svg>
+          <div style="font-size:13px;color:var(--muted);margin-top:12px;">
+            Training error ↓↓ &nbsp;|&nbsp; Test error ↑<br/>
+            <strong>Fix:</strong> Regularisation, more data, pruning
+          </div>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <strong>Learning Curves</strong>
+        Plot training and validation loss against the number of training samples. If both curves converge to a high error, you have high bias. If there's a large gap between them, you have high variance.
+      </div>
+    </section>
+
+    <!-- CLUSTERING -->
+    <section id="clustering">
+      <div class="section-label">06 — Clustering Validation</div>
+      <h2>Validating Clustering Models</h2>
+      <p>Clustering is unsupervised — there are no ground-truth labels to compare against. Validation must instead measure the <em>quality</em> of the clusters themselves: are points within a cluster similar to each other, and different from points in other clusters?</p>
+
+      <h3><span class="h3-num">6.1</span> Silhouette Score</h3>
+      <p>For each data point, the silhouette score measures how similar it is to its own cluster (cohesion <em>a</em>) vs. the nearest other cluster (separation <em>b</em>). The score ranges from -1 to +1, where +1 is ideal.</p>
+
+      <div class="diagram-wrap">
+        <div class="diagram-title">Silhouette Formula: s = (b − a) / max(a, b)</div>
+        <svg viewBox="0 0 600 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;">
+          <!-- Cluster A -->
+          <circle cx="120" cy="70" r="50" fill="#1a6b4a" opacity="0.12"/>
+          <circle cx="100" cy="60" r="5" fill="#1a6b4a"/>
+          <circle cx="130" cy="80" r="5" fill="#1a6b4a"/>
+          <circle cx="115" cy="55" r="5" fill="#1a6b4a"/>
+          <circle cx="140" cy="65" r="5" fill="#1a6b4a"/>
+          <circle cx="105" cy="85" r="5" fill="#1a6b4a"/>
+          <!-- Centroid point -->
+          <circle cx="118" cy="70" r="7" fill="#c0392b"/>
+          <line x1="118" y1="70" x2="100" y2="60" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4"/>
+          <text x="72" y="52" fill="#c0392b" font-family="JetBrains Mono,monospace" font-size="11">a = avg dist</text>
+          <text x="60" y="64" fill="#c0392b" font-family="JetBrains Mono,monospace" font-size="11">to own cluster</text>
+          <!-- Cluster B -->
+          <circle cx="460" cy="70" r="50" fill="#1c4d8c" opacity="0.12"/>
+          <circle cx="440" cy="60" r="5" fill="#1c4d8c"/>
+          <circle cx="480" cy="75" r="5" fill="#1c4d8c"/>
+          <circle cx="455" cy="90" r="5" fill="#1c4d8c"/>
+          <circle cx="475" cy="55" r="5" fill="#1c4d8c"/>
+          <!-- Line from red point to cluster B -->
+          <line x1="118" y1="70" x2="410" y2="70" stroke="#1c4d8c" stroke-width="1.5" stroke-dasharray="4"/>
+          <text x="220" y="62" fill="#1c4d8c" font-family="JetBrains Mono,monospace" font-size="11">b = avg dist to</text>
+          <text x="225" y="76" fill="#1c4d8c" font-family="JetBrains Mono,monospace" font-size="11">nearest cluster</text>
+          <text x="0"  y="120" fill="#6b6355" font-family="DM Sans,sans-serif" font-size="12">Score → +1 (near own cluster, far from others)</text>
+          <text x="310" y="120" fill="#6b6355" font-family="DM Sans,sans-serif" font-size="12">Score → -1 (wrong cluster assignment)</text>
+        </svg>
+      </div>
+
+      <h3><span class="h3-num">6.2</span> Elbow Method — Finding Optimal k</h3>
+      <p>For k-Means, the Elbow Method plots the Within-Cluster Sum of Squares (WCSS) for different values of k. The "elbow" — where the rate of improvement drops sharply — is typically the best k.</p>
+
+      <div class="diagram-wrap">
+        <div class="diagram-title">Elbow Curve — WCSS vs. Number of Clusters</div>
+        <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:500px;">
+          <!-- Axes -->
+          <line x1="50" y1="170" x2="460" y2="170" stroke="#c9bfa8" stroke-width="1.5"/>
+          <line x1="50" y1="20"  x2="50"  y2="170" stroke="#c9bfa8" stroke-width="1.5"/>
+          <!-- Axis labels -->
+          <text x="240" y="192" fill="#6b6355" font-family="DM Sans,sans-serif" font-size="12" text-anchor="middle">Number of Clusters (k)</text>
+          <text x="14" y="100" fill="#6b6355" font-family="DM Sans,sans-serif" font-size="12" text-anchor="middle" transform="rotate(-90,14,100)">WCSS</text>
+          <!-- Elbow curve: plotted points -->
+          <!-- k=1: high WCSS, k=2 drops, k=3 drops (elbow at k=3), k=4+ flattens -->
+          <polyline points="80,30 150,80 220,120 290,140 360,152 430,160"
+                    fill="none" stroke="#1c4d8c" stroke-width="2.5"/>
+          <!-- Dots -->
+          <circle cx="80"  cy="30"  r="5" fill="#1c4d8c"/>
+          <circle cx="150" cy="80"  r="5" fill="#1c4d8c"/>
+          <circle cx="220" cy="120" r="7" fill="#c0392b"/>
+          <circle cx="290" cy="140" r="5" fill="#1c4d8c"/>
+          <circle cx="360" cy="152" r="5" fill="#1c4d8c"/>
+          <circle cx="430" cy="160" r="5" fill="#1c4d8c"/>
+          <!-- Elbow annotation -->
+          <line x1="220" y1="30" x2="220" y2="115" stroke="#c0392b" stroke-width="1" stroke-dasharray="4"/>
+          <text x="224" y="45" fill="#c0392b" font-family="JetBrains Mono,monospace" font-size="11">Elbow ≈ k=3</text>
+          <!-- x-axis tick labels -->
+          <text x="80"  y="184" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">1</text>
+          <text x="150" y="184" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">2</text>
+          <text x="220" y="184" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">3</text>
+          <text x="290" y="184" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">4</text>
+          <text x="360" y="184" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">5</text>
+          <text x="430" y="184" fill="#6b6355" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">6</text>
+        </svg>
+      </div>
+
+      <div class="cluster-metrics">
+        <div class="cm-card">
+          <span class="cm-val">+1</span>
+          <div class="cm-name">Perfect Silhouette score (dense, well-separated clusters)</div>
+        </div>
+        <div class="cm-card">
+          <span class="cm-val" style="color:var(--accent3)">0</span>
+          <div class="cm-name">Overlapping clusters — point is on the boundary</div>
+        </div>
+        <div class="cm-card">
+          <span class="cm-val">−1</span>
+          <div class="cm-name">Misclassified — closer to another cluster</div>
+        </div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-lang">Python · Full Clustering Validation</div>
+        </div>
+        <pre><span class="k">from</span> <span class="v">sklearn.cluster</span> <span class="k">import</span> <span class="cls">KMeans</span>
+<span class="k">from</span> <span class="v">sklearn.metrics</span> <span class="k">import</span> (
+    <span class="fn">silhouette_score</span>, <span class="fn">davies_bouldin_score</span>,
+    <span class="fn">calinski_harabasz_score</span>
+)
+<span class="k">import</span> <span class="v">matplotlib.pyplot</span> <span class="k">as</span> <span class="v">plt</span>
+<span class="k">import</span> <span class="v">numpy</span> <span class="k">as</span> <span class="v">np</span>
+
+<span class="v">K_range</span> <span class="op">=</span> <span class="fn">range</span>(<span class="n">2</span>, <span class="n">11</span>)
+<span class="v">wcss</span>, <span class="v">sil</span>, <span class="v">db</span> <span class="op">=</span> [], [], []
+
+<span class="k">for</span> <span class="v">k</span> <span class="k">in</span> <span class="v">K_range</span>:
+    <span class="v">km</span>     <span class="op">=</span> <span class="cls">KMeans</span>(<span class="v">n_clusters</span><span class="op">=</span><span class="v">k</span>, <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>, <span class="v">n_init</span><span class="op">=</span><span class="n">10</span>)
+    <span class="v">labels</span> <span class="op">=</span> <span class="v">km</span>.<span class="fn">fit_predict</span>(<span class="v">X</span>)
+    
+    <span class="v">wcss</span>.<span class="fn">append</span>(<span class="v">km</span>.<span class="v">inertia_</span>)
+    <span class="v">sil</span>.<span class="fn">append</span>(<span class="fn">silhouette_score</span>(<span class="v">X</span>, <span class="v">labels</span>))
+    <span class="v">db</span>.<span class="fn">append</span>(<span class="fn">davies_bouldin_score</span>(<span class="v">X</span>, <span class="v">labels</span>))
+
+<span class="c"># Best k: highest silhouette, lowest Davies-Bouldin</span>
+<span class="v">best_k</span> <span class="op">=</span> <span class="v">K_range</span>[<span class="fn">np.argmax</span>(<span class="v">sil</span>)]
+<span class="k">print</span>(<span class="s">f"Optimal k (Silhouette): {best_k}"</span>)
+<span class="k">print</span>(<span class="s">f"Silhouette @ k={best_k}: {max(sil):.4f}"</span>)
+<span class="k">print</span>(<span class="s">f"Davies-Bouldin @ k={best_k}: {db[best_k-2]:.4f}"</span>)</pre>
+      </div>
+    </section>
+
+    <!-- FULL WORKFLOW -->
+    <section id="steps">
+      <div class="section-label">07 — End-to-End Workflow</div>
+      <h2>The Complete Validation Workflow</h2>
+      <p>Here's a consolidated end-to-end pipeline that applies everything covered in this guide — data splitting, cross-validation, metrics, and clustering — in a single, coherent script.</p>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-lang">Python · End-to-End Validation Pipeline</div>
+        </div>
+        <pre><span class="k">import</span> <span class="v">numpy</span> <span class="k">as</span> <span class="v">np</span>
+<span class="k">from</span> <span class="v">sklearn.datasets</span> <span class="k">import</span> <span class="fn">make_classification</span>
+<span class="k">from</span> <span class="v">sklearn.model_selection</span> <span class="k">import</span> <span class="fn">StratifiedKFold</span>, <span class="fn">cross_validate</span>
+<span class="k">from</span> <span class="v">sklearn.ensemble</span> <span class="k">import</span> <span class="cls">GradientBoostingClassifier</span>
+<span class="k">from</span> <span class="v">sklearn.preprocessing</span> <span class="k">import</span> <span class="cls">StandardScaler</span>
+<span class="k">from</span> <span class="v">sklearn.pipeline</span> <span class="k">import</span> <span class="cls">Pipeline</span>
+<span class="k">from</span> <span class="v">sklearn.metrics</span> <span class="k">import</span> <span class="fn">classification_report</span>
+
+<span class="c"># ── 1. Generate synthetic data ─────────────────────────</span>
+<span class="v">X</span>, <span class="v">y</span> <span class="op">=</span> <span class="fn">make_classification</span>(
+    <span class="v">n_samples</span><span class="op">=</span><span class="n">2000</span>, <span class="v">n_features</span><span class="op">=</span><span class="n">20</span>, <span class="v">n_informative</span><span class="op">=</span><span class="n">12</span>,
+    <span class="v">weights</span><span class="op">=</span>[<span class="n">0.7</span>, <span class="n">0.3</span>], <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>
+)
+
+<span class="c"># ── 2. Hold out 20% test set ───────────────────────────</span>
+<span class="k">from</span> <span class="v">sklearn.model_selection</span> <span class="k">import</span> <span class="fn">train_test_split</span>
+<span class="v">X_tr</span>, <span class="v">X_te</span>, <span class="v">y_tr</span>, <span class="v">y_te</span> <span class="op">=</span> <span class="fn">train_test_split</span>(
+    <span class="v">X</span>, <span class="v">y</span>, <span class="v">test_size</span><span class="op">=</span><span class="n">0.2</span>, <span class="v">stratify</span><span class="op">=</span><span class="v">y</span>, <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>
+)
+
+<span class="c"># ── 3. Build pipeline ─────────────────────────────────</span>
+<span class="v">pipe</span> <span class="op">=</span> <span class="cls">Pipeline</span>([
+    (<span class="s">'scaler'</span>, <span class="cls">StandardScaler</span>()),
+    (<span class="s">'clf'</span>,    <span class="cls">GradientBoostingClassifier</span>(<span class="v">random_state</span><span class="op">=</span><span class="n">42</span>))
+])
+
+<span class="c"># ── 4. Stratified 5-fold cross-validation ────────────</span>
+<span class="v">cv</span> <span class="op">=</span> <span class="cls">StratifiedKFold</span>(<span class="v">n_splits</span><span class="op">=</span><span class="n">5</span>, <span class="v">shuffle</span><span class="op">=</span><span class="k">True</span>, <span class="v">random_state</span><span class="op">=</span><span class="n">42</span>)
+<span class="v">cv_results</span> <span class="op">=</span> <span class="fn">cross_validate</span>(
+    <span class="v">pipe</span>, <span class="v">X_tr</span>, <span class="v">y_tr</span>, <span class="v">cv</span><span class="op">=</span><span class="v">cv</span>,
+    <span class="v">scoring</span><span class="op">=</span>[<span class="s">'accuracy'</span>, <span class="s">'f1_weighted'</span>, <span class="s">'roc_auc'</span>],
+    <span class="v">return_train_score</span><span class="op">=</span><span class="k">True</span>
+)
+
+<span class="k">for</span> <span class="v">m</span> <span class="k">in</span> [<span class="s">'accuracy'</span>, <span class="s">'f1_weighted'</span>, <span class="s">'roc_auc'</span>]:
+    <span class="v">tr</span>  <span class="op">=</span> <span class="v">cv_results</span>[<span class="s">f'train_{m}'</span>]
+    <span class="v">val</span> <span class="op">=</span> <span class="v">cv_results</span>[<span class="s">f'test_{m}'</span>]
+    <span class="k">print</span>(<span class="s">f"{m:18s} train={tr.mean():.3f}±{tr.std():.3f}"</span>
+          <span class="s">f"  val={val.mean():.3f}±{val.std():.3f}"</span>)
+
+<span class="c"># ── 5. Final evaluation on held-out test set ─────────</span>
+<span class="v">pipe</span>.<span class="fn">fit</span>(<span class="v">X_tr</span>, <span class="v">y_tr</span>)
+<span class="v">y_pred</span> <span class="op">=</span> <span class="v">pipe</span>.<span class="fn">predict</span>(<span class="v">X_te</span>)
+<span class="k">print</span>(<span class="s">"\n── Final Test Report ──"</span>)
+<span class="k">print</span>(<span class="fn">classification_report</span>(<span class="v">y_te</span>, <span class="v">y_pred</span>))</pre>
+      </div>
+    </section>
+
+    <!-- BEST PRACTICES -->
+    <section id="best-practices">
+      <div class="section-label">08 — Best Practices</div>
+      <h2>Best Practices &amp; Common Pitfalls</h2>
+      <p>Knowing the techniques is only half the battle. Equally important is knowing the subtle traps that can give you falsely optimistic results and models that fail in production.</p>
+
+      <ul class="checklist">
+        <li>Always hold out a <strong>final test set</strong> before any exploration. Never touch it until the very end.</li>
+        <li>Apply <strong>stratification</strong> whenever your classes are imbalanced (e.g., 90/10 ratio).</li>
+        <li>For time-series, use <strong>walk-forward validation</strong> — never shuffle temporal data.</li>
+        <li>Fit preprocessing (scalers, encoders) only on training data. Transform test data with the already-fitted transformer to prevent <strong>data leakage</strong>.</li>
+        <li>Repeat cross-validation with <strong>multiple random seeds</strong> to measure estimate stability.</li>
+        <li>Use learning curves to diagnose <strong>bias vs. variance</strong> before blindly adding complexity.</li>
+        <li>Always check a <strong>confusion matrix</strong> for classification — accuracy alone can be misleading.</li>
+        <li>For clustering, report <strong>multiple metrics</strong> (Silhouette + Davies-Bouldin + Calinski-Harabasz) — no single metric is definitive.</li>
+        <li>Validate on data that reflects the <strong>real-world distribution</strong> your model will encounter in production.</li>
+        <li>Document every validation decision: the split ratios, random seeds, and metric choices.</li>
+      </ul>
+
+      <div class="callout">
+        <strong>The Cardinal Rule</strong>
+        Any data used to make any decision about the model — including feature selection, preprocessing, and hyperparameter tuning — must be excluded from the final test evaluation. Only one look at the test set is permitted.
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sidebar-card">
+      <h4>Quick Stats</h4>
+      <div class="sidebar-stat">
+        <span>Typical train split</span>
+        <span class="val">70–80%</span>
+      </div>
+      <div class="sidebar-stat">
+        <span>Typical k in k-Fold</span>
+        <span class="val">5 or 10</span>
+      </div>
+      <div class="sidebar-stat">
+        <span>Silhouette range</span>
+        <span class="val">−1 → +1</span>
+      </div>
+      <div class="sidebar-stat">
+        <span>Good silhouette</span>
+        <span class="val">&gt; 0.5</span>
+      </div>
+      <div class="sidebar-stat">
+        <span>Elbow method</span>
+        <span class="val">WCSS plot</span>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <h4>Metric Cheat Sheet</h4>
+      <div class="cheatsheet-item">
+        <span class="ci-key">RMSE</span>
+        <span>Penalises large errors heavily (regression)</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">MAE</span>
+        <span>Robust to outliers (regression)</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">R²</span>
+        <span>Variance explained; max is 1.0</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">F1</span>
+        <span>Balances precision &amp; recall</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">AUC</span>
+        <span>Threshold-free classifier quality</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">Sil</span>
+        <span>Cluster cohesion vs separation</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">DB</span>
+        <span>Davies-Bouldin: lower = better</span>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <h4>Technique Selector</h4>
+      <div class="cheatsheet-item">
+        <span class="ci-key">Big data</span>
+        <span>Simple train/val/test split</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">Small data</span>
+        <span>Repeated k-Fold or LOO-CV</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">Imbalanced</span>
+        <span>Stratified k-Fold + F1/AUC</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">Time series</span>
+        <span>Walk-forward / expanding window</span>
+      </div>
+      <div class="cheatsheet-item">
+        <span class="ci-key">Clustering</span>
+        <span>Silhouette + DB + Elbow</span>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <p class="footer-tagline"><span>All techniques explained with Python examples</span></p>
+  <p class="footer-copyright">© 2026 <a href="https://prateekdutta2001.github.io/PrateekDutta.in/" target="_blank" rel="noopener noreferrer">PRATEEK DUTTA</a>. This work is licensed under a Creative Commons Attribution 4.0 International License (CC BY 4.0).</p>
+</footer>
+
+<script src="model_validation.js" defer></script>
+</body>
+</html>

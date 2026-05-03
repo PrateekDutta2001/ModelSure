@@ -2,7 +2,7 @@
   "use strict";
 
   function initTocActiveState() {
-    var links = document.querySelectorAll('.toc-pills a[href^="#"]');
+    var links = document.querySelectorAll('.section-nav a[href^="#"]');
     var sections = document.querySelectorAll('.content section[id]');
     if (!links.length || !sections.length) return;
 
